@@ -9,6 +9,7 @@ Desktop.ini
 # 构建产物与依赖
 node_modules/
 dist/
+scf-dist/
 
 # 编辑器
 .vscode/

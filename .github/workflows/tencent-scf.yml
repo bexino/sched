@@ -1,0 +1,38 @@
+name: 部署到腾讯云函数
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tencent-scf
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: 准备函数文件
+        run: |
+          mkdir -p scf-dist/public
+          cp -R dist/. scf-dist/public/
+          cp scf/app.js scf/scf_bootstrap scf-dist/
+          chmod +x scf-dist/scf_bootstrap
+      - name: 部署云函数
+        uses: woodyyan/tencent-serverless-action@main
+        env:
+          STAGE: prod
+          SERVERLESS_PLATFORM_VENDOR: tencent
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}

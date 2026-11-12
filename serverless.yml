@@ -1,0 +1,18 @@
+component: scf
+name: siss
+stage: prod
+inputs:
+  name: siss
+  type: web
+  src: ./scf-dist
+  runtime: Nodejs16.13
+  region: ap-nanjing
+  memorySize: 128
+  timeout: 10
+  events:
+    - http:
+        parameters:
+          netConfig:
+            enableExtranet: true
+          qualifier: $DEFAULT
+          authType: NONE
