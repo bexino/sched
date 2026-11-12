@@ -267,6 +267,7 @@ const elements = {
   btnSubviewTable: document.getElementById('btn-subview-table'),
   btnSubviewText: document.getElementById('btn-subview-text'),
   btnDownloadHtml: document.getElementById('btn-download-html'),
+  btnDownloadPdf: document.getElementById('btn-download-pdf'),
   btnDownloadCsv: document.getElementById('btn-download-csv'),
   btnCopyMarkdown: document.getElementById('btn-copy-markdown'),
   viewTextContainer: document.getElementById('view-text-container'),
@@ -318,6 +319,7 @@ const elements = {
   btnEditSubviewTable: document.getElementById('btn-edit-subview-table'),
   btnEditSubviewText: document.getElementById('btn-edit-subview-text'),
   btnEditDownloadHtml: document.getElementById('btn-edit-download-html'),
+  btnEditDownloadPdf: document.getElementById('btn-edit-download-pdf'),
   btnEditDownloadCsv: document.getElementById('btn-edit-download-csv'),
   btnEditCopyMarkdown: document.getElementById('btn-edit-copy-markdown'),
   editViewTextContainer: document.getElementById('edit-view-text-container'),
@@ -2555,8 +2557,7 @@ function generateStandaloneHtml(items, stats) {
 // 导出前延迟 1 秒并提示"正在思考..."，期间加锁防止重复触发导致时间戳冲突
 let isExportingHtml = false;
 
-async function downloadHtmlFile() {
-  if (isExportingHtml) return;
+function getExportScheduleData() {
   const { items } = getActiveScheduleData();
   if (!items || items.length === 0) return;
 
@@ -2592,6 +2593,15 @@ async function downloadHtmlFile() {
     };
   }
 
+  return { items, stats };
+}
+
+async function downloadHtmlFile() {
+  if (isExportingHtml) return;
+  const data = getExportScheduleData();
+  if (!data) return;
+  const { items, stats } = data;
+
   isExportingHtml = true;
   try {
     await thinkBeforeExport();
@@ -2611,6 +2621,24 @@ async function downloadHtmlFile() {
   } finally {
     isExportingHtml = false;
   }
+}
+
+// 复用独立排班表的打印版式，通过浏览器打印对话框保存 PDF。
+function downloadPdfFile() {
+  const data = getExportScheduleData();
+  if (!data) return;
+
+  const frame = document.createElement('iframe');
+  frame.title = '排班表打印预览';
+  frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-10000px;top:0;border:0';
+  frame.onload = () => {
+    const printWindow = frame.contentWindow;
+    printWindow.addEventListener('afterprint', () => frame.remove(), { once: true });
+    printWindow.focus();
+    printWindow.print();
+  };
+  frame.srcdoc = generateStandaloneHtml(data.items, data.stats);
+  document.body.appendChild(frame);
 }
 
 // ----------------------------------------------------
@@ -3161,6 +3189,7 @@ function setupEventListeners() {
   });
 
   elements.btnDownloadHtml.addEventListener('click', downloadHtmlFile);
+  elements.btnDownloadPdf.addEventListener('click', downloadPdfFile);
   elements.btnDownloadCsv.addEventListener('click', downloadCsvFile);
   elements.btnCopyMarkdown.addEventListener('click', copyMarkdownToClipboard);
 
@@ -3270,6 +3299,7 @@ function setupEventListeners() {
   });
 
   elements.btnEditDownloadHtml.addEventListener('click', downloadHtmlFile);
+  elements.btnEditDownloadPdf.addEventListener('click', downloadPdfFile);
   elements.btnEditDownloadCsv.addEventListener('click', downloadCsvFile);
   elements.btnEditCopyMarkdown.addEventListener('click', copyMarkdownToClipboard);
 
