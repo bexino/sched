@@ -103,6 +103,7 @@ const state = {
     importedItems: [],   // 导入的旧排班表 [{dateStr, weekday, names}]
     executedThrough: '', // 已执行截止日（含该天）YYYY-MM-DD
     remainingItems: [],  // 截止日之后的未执行班次（沿用原顺序）
+    regroupedAssignments: [], // 实际用于顺延的每日人员
     newStartDate: '',    // 重新编排的起始日期
     finalItems: [],
     markdownText: ''
@@ -293,6 +294,7 @@ const elements = {
   editStatRemaining: document.getElementById('edit-stat-remaining'),
   editImportedCardsContainer: document.getElementById('edit-imported-cards-container'),
   btnEditClearImport: document.getElementById('btn-edit-clear-import'),
+  editDailyCount: document.getElementById('edit-daily-count'),
   editNewStartDateInput: document.getElementById('edit-new-start-date-input'),
   editNewWeekdayTag: document.getElementById('edit-new-weekday-tag'),
   // editCalStatRangeStart: document.getElementById('edit-cal-stat-range-start'),
@@ -2646,6 +2648,16 @@ function goToEditStep(targetStep) {
     renderEditImportedCards();
   }
 
+  if (targetStep >= 4) {
+    try {
+      const value = elements.editDailyCount.value.trim();
+      edit.regroupedAssignments = value ? regroupRemainingAssignments(edit.remainingItems, Number(value)) : edit.remainingItems.map(item => item.names);
+    } catch (error) {
+      showToast(error.message, '<span class="material-symbols-outlined text-[16px]!" aria-hidden="true">warning</span>');
+      return;
+    }
+  }
+
   // 进入第 4 步（假期调整）：清空共享假期集合，日历定位到新起始日期所在月
   if (targetStep === 4) {
     if (!edit.newStartDate) {
@@ -2695,14 +2707,14 @@ function generateEditFinalSchedule() {
   const edit = state.editOld;
   const { workdays } = computeScheduleDates(
     edit.newStartDate,
-    edit.remainingItems.length,
+    edit.regroupedAssignments.length,
     state.excludedHolidays,
     state.manualWorkdays
   );
 
   // 假期设置可能导致可用工作日不足，需阻断并提示
-  if (workdays.length < edit.remainingItems.length) {
-    showToast(`可用工作日不足：需要 ${edit.remainingItems.length} 天，仅找到 ${workdays.length} 天，请检查假期设置`, '<span class="material-symbols-outlined text-[16px]!" aria-hidden="true">warning</span>');
+  if (workdays.length < edit.regroupedAssignments.length) {
+    showToast(`可用工作日不足：需要 ${edit.regroupedAssignments.length} 天，仅找到 ${workdays.length} 天，请检查假期设置`, '<span class="material-symbols-outlined text-[16px]!" aria-hidden="true">warning</span>');
     return false;
   }
 
@@ -2710,7 +2722,7 @@ function generateEditFinalSchedule() {
     dateStr: wd.dateStr,
     weekday: wd.weekday,
     isManualWorkday: wd.isManualWorkday,
-    names: edit.remainingItems[i].names
+    names: edit.regroupedAssignments[i]
   }));
   edit.markdownText = formatToMarkdown(edit.finalItems);
   return true;
@@ -2871,6 +2883,7 @@ function handleEditExecutedThroughChange() {
 
   // 字符串比较对 YYYY-MM-DD 即为时间顺序
   state.editOld.remainingItems = state.editOld.importedItems.filter(item => item.dateStr > val);
+  state.editOld.regroupedAssignments = state.editOld.remainingItems.map(item => item.names);
   renderEditImportedCards();
 }
 
@@ -2906,11 +2919,11 @@ function getEditScheduleDateRange() {
   const edit = state.editOld;
   const { workdays } = computeScheduleDates(
     edit.newStartDate || getTodayDateStr(),
-    edit.remainingItems.length + 1,
+    edit.regroupedAssignments.length + 1,
     state.excludedHolidays,
     state.manualWorkdays
   );
-  const allowed = workdays.slice(0, edit.remainingItems.length);
+  const allowed = workdays.slice(0, edit.regroupedAssignments.length);
   const fallback = edit.newStartDate || getTodayDateStr();
   return {
     start: fallback,
@@ -2921,7 +2934,7 @@ function getEditScheduleDateRange() {
 // 第 3 步：渲染假期修改月历（镜像 renderStep4Calendar，作用于旧表流程）
 function renderEditCalendar() {
   const edit = state.editOld;
-  const totalDays = edit.remainingItems.length;
+  const totalDays = edit.regroupedAssignments.length;
 
   // 渲染前强制清掉超出当前合法区间的选择
   const renderRange = getEditScheduleDateRange();
@@ -2997,6 +3010,7 @@ function resetEditOldFlow() {
   elements.editImportTextarea.value = '';
   elements.editExecutedThroughInput.value = '';
   elements.editNewStartDateInput.value = '';
+  elements.editDailyCount.value = '';
   elements.editExecutedWeekdayTag.textContent = '';
   elements.editNewWeekdayTag.textContent = '';
   elements.editStatRemaining.textContent = '';

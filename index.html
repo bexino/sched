@@ -433,6 +433,12 @@
       <div class="space-y-6">
         <p class="text-sm text-s-grey-600">选择重新编排的起始日期，下一步将在此后进行假期调整。</p>
 
+        <div class="bg-s-grey-100 p-5 rounded-s-lg border-[0.8px] border-s-grey-400 max-w-md">
+          <label for="edit-daily-count" class="block text-sm font-semibold text-s-grey-800 mb-2">每日值班人数（可选）</label>
+          <input id="edit-daily-count" type="number" min="1" step="1" placeholder="留空则沿用原分组" class="w-full rounded-s-md border-[0.8px] border-s-grey-400 py-2.5 px-4 text-base text-s-grey-900 bg-white focus:outline-none">
+          <p class="mt-2 text-xs text-s-grey-600">修改人数后将重新分组，保留每人剩余的值班次数；最后一天可能不足设定人数。</p>
+        </div>
+
         <!-- 新编排起始日期卡片 -->
         <div class="bg-s-grey-100 p-5 rounded-s-lg border-[0.8px] border-s-grey-400 max-w-md">
           <label for="edit-new-start-date-input" class="block text-sm font-semibold text-s-grey-800 mb-2">
