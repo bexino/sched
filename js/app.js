@@ -475,7 +475,7 @@ function updateTopBar() {
     elements.topStepNumber.classList.add('hidden');
     elements.topStepText.textContent = '能工智人排班系统';
     elements.topStepTitle.setAttribute('aria-expanded', 'false');
-    elements.topStepTitle.classList.add('pointer-events-none');
+    elements.topStepTitle.classList.add('pointer-events-none', 'absolute', 'left-1/2', 'top-1/2', '-translate-x-1/2', '-translate-y-1/2');
     elements.topBtnBack?.classList.add('hidden!');
     elements.topBtnNext?.classList.add('hidden!');
     elements.topBtnMode?.classList.remove('hidden!');
@@ -495,7 +495,7 @@ function updateTopBar() {
   const item = items.find(i => i.step === step);
   const title = item ? item.title : `第 ${step} 步`;
 
-  elements.topStepTitle.classList.remove('pointer-events-none');
+  elements.topStepTitle.classList.remove('pointer-events-none', 'absolute', 'left-1/2', 'top-1/2', '-translate-x-1/2', '-translate-y-1/2');
   elements.topStepTitle.dataset.flow = isEditFlow ? 'edit' : 'new';
   elements.topStepNumber.classList.remove('hidden');
   elements.topStepNumber.textContent = step;
