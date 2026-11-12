@@ -3,10 +3,10 @@
 > 
 > If you wish to try this system, it is recommended that you use the built-in translation feature of your browser.
 
-[![Commit Activity](https://img.shields.io/github/commit-activity/t/bexino/siss?color=red)](https://github.com/bexino/siss/commits/main/)
-[![License](https://img.shields.io/github/license/bexino/siss?color=yellow)](https://github.com/bexino/siss/blob/main/LICENSE)
+[![Commit Activity](https://img.shields.io/github/commit-activity/t/bexino/sched?color=red)](https://github.com/bexino/sched/commits/main/)
+[![License](https://img.shields.io/github/license/bexino/sched?color=yellow)](https://github.com/bexino/sched/blob/main/LICENSE)
 [![MadeWith♥](https://img.shields.io/badge/@bexino-用_♥_制作-orange)](https://github.com/bexino)
-[![ViewInGithub](https://img.shields.io/badge/Github-bexino%2Fsiss-white?logo=github&logoColor=auto&labelColor=555555&color=000000)](https://github.com/bexino/siss/)
+[![ViewInGithub](https://img.shields.io/badge/Github-bexino%2Fsched-white?logo=github&logoColor=auto&labelColor=555555&color=000000)](https://github.com/bexino/sched/)
 
 # 能工智人排班系统
 
@@ -14,7 +14,7 @@
 
 ## 快速开始
 
-在线体验：https://github.com/bexino/siss
+在线体验：https://github.com/bexino/sched
 
 ## 特性
 
