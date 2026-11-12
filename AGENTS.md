@@ -27,4 +27,4 @@ Static scheduling app (能工智人排班系统): a 5-step wizard that generates
 ## 项目与云资源名称
 
 - GitHub 仓库和项目名称为 `bexino/sched` / `sched`。不要将 `siss` 当作当前项目或仓库名。
-- 现有腾讯云 SCF 函数名及 Cloudflare Worker 资源名为 `siss`；这些是独立的云资源标识，部署时须保留。不要仅因项目或仓库名称不同而改名或更换部署目标。
+- 腾讯云部署目标为广州 `default` 命名空间的独立 SCF 函数 `siss-2`；原函数和 Cloudflare Worker `siss` 是独立资源，迁移验证前须保留。

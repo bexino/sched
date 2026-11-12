@@ -8,9 +8,9 @@ from tencentcloud.common import credential
 from tencentcloud.scf.v20180416 import models, scf_client
 
 # 已有云函数的资源名称与 GitHub 仓库名称可以不同。
-FUNCTION_NAME = "siss"
+FUNCTION_NAME = "siss-2"
 NAMESPACE = "default"
-REGION = "ap-nanjing"
+REGION = "ap-guangzhou"
 
 
 def main():
@@ -29,6 +29,8 @@ def main():
     query.FunctionName = FUNCTION_NAME
     query.Namespace = NAMESPACE
     before = client.GetFunction(query)
+    if before.Type != "HTTP" or before.Runtime != "Nodejs20.19":
+        raise RuntimeError(f"目标函数类型或运行时不匹配：{before.Type} / {before.Runtime}")
     if before.Status != "Active":
         raise RuntimeError(f"函数状态不是 Active：{before.Status} {before.StatusDesc}")
     print(f"准备更新 {REGION}/{NAMESPACE}/{FUNCTION_NAME}", flush=True)
