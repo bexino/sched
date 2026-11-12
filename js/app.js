@@ -2183,7 +2183,7 @@ function generateStandaloneHtml(items, stats) {
     @media print {
       body { background: #ffffff; padding: 0; }
       .header { border: none; box-shadow: none; padding: 0 0 16px 0; }
-      .btn-print, .btn-csv, .header-actions, .toolbar, .cards-wrapper, .view-toggle, .markdown-wrapper { display: none !important; }
+      .btn-print, .btn-csv, .header-actions, .toolbar, .cards-wrapper, .view-toggle, .markdown-wrapper, .filter-hint { display: none !important; }
       .table-wrapper { display: block !important; max-height: none; overflow: visible; }
       .table-container { border: 0.8px solid #cccccc; box-shadow: none; }
       th, td { border-bottom: 0.8px solid #cccccc; }
@@ -2196,7 +2196,7 @@ function generateStandaloneHtml(items, stats) {
       <div class="header-top">
         <div>
           <div class="title">排班表</div>
-          <div class="subtitle">排班区间：${stats.startDate} 至 ${stats.endDate} <br> 点击人名亦可快速筛选。</div>
+          <div class="subtitle">排班区间：${stats.startDate} 至 ${stats.endDate}<span class="filter-hint"><br>点击人名亦可快速筛选。</span></div>
         </div>
         <div class="header-actions">
           <button class="btn-csv" onclick="downloadCsv()"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="1em" height="1em"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 2v3h-4V5h4zM8 19H5v-3h3v3zm0-5H5v-4h3v4zm0-6V5h3v3H8zm5 11h-3v-3h3v3zm0-5h-3v-4h3v4zm0-6V5h3v3h-3zm6 11h-4v-3h4v3zm0-5h-4v-4h4v4z"/></svg><span>表格</span></button>
