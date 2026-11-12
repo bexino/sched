@@ -16,7 +16,7 @@
   <!-- Material Symbols 图标字体：本地缓存（assets/fonts/，初次获取自 LoliNet 镜像），运行时不再请求云端 -->
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-s-page text-s-grey-900 min-h-screen flex flex-col font-sans antialiased">
+<body class="bg-s-page text-s-grey-900 min-h-screen flex flex-col font-sans antialiased pb-12">
 
   <!-- 顶部导航条（Smartisan App Bar：白底、内容居中、下方渐隐阴影；与 main 相同 max-w 对齐） -->
   <header class="appbar-shadow relative z-30 bg-white border-b-[0.8px] border-s-grey-400 sticky top-0">
@@ -153,7 +153,7 @@
 
       <!-- 轮换方案列表预览 -->
       <div class="border-[0.8px] border-s-grey-400 rounded-s-lg overflow-hidden mb-6">
-        <div class="bg-s-grey-100 px-4 py-2.5 border-b-[0.8px] border-s-grey-400 flex flex-col sm:flex-row sm:items-center gap-2 text-xs">
+        <div class="bg-s-grey-100 px-4 py-2.5 border-b-[0.8px] border-s-grey-400 flex items-center gap-2 text-xs">
           <div class="flex items-center gap-2 flex-wrap flex-1">
             <!-- Smartisan 分段 Tab（全站统一样式，见 style.css .smtabs） -->
             <div class="smtabs" role="tablist" aria-label="轮换方案视图切换">
@@ -166,7 +166,7 @@
             </div>
           </div>
           <!-- 修改 / 重新打乱（圆形纯图标按钮，居右） -->
-          <div class="flex items-center gap-1.5 self-end sm:self-auto">
+          <div class="flex items-center gap-1.5">
             <button type="button" id="btn-edit-assignments" aria-label="修改" title="修改" class="inline-flex items-center justify-center w-8 h-8 bg-s-blue-100 text-s-blue-400 active:brightness-95 border-[0.8px] border-s-chip-blue-border rounded-full">
               <span class="material-symbols-outlined text-[18px]!" aria-hidden="true">edit</span>
             </button>
@@ -307,6 +307,9 @@
           <button type="button" id="btn-download-html" class="inline-flex items-center gap-1.5 px-4 py-2 bg-s-primary border-[0.8px] border-s-blue-500 text-white rounded-s-md text-sm font-medium shadow-s-card-sm active:bg-s-blue-pressed active:border-s-blue-600">
             <span class="material-symbols-outlined text-[18px]!" aria-hidden="true">download</span><span>导出HTML</span>
           </button>
+          <button type="button" id="btn-download-pdf" class="inline-flex items-center gap-1.5 px-4 py-2 bg-s-grad-white border-[0.8px] border-s-grey-300 text-s-grey-800 rounded-s-md text-sm font-medium active:bg-s-grad-white-pressed">
+            <span class="material-symbols-outlined text-[18px]!" aria-hidden="true">download</span><span>导出PDF</span>
+          </button>
           <button type="button" id="btn-download-csv" class="inline-flex items-center gap-1.5 px-4 py-2 bg-s-grad-white border-[0.8px] border-s-grey-300 text-s-grey-800 rounded-s-md text-sm font-medium active:bg-s-grad-white-pressed">
             <span class="material-symbols-outlined text-[18px]!" aria-hidden="true">table_view</span><span>导出CSV表格</span>
           </button>
@@ -433,6 +436,21 @@
       <div class="space-y-6">
         <p class="text-sm text-s-grey-600">选择重新编排的起始日期，下一步将在此后进行假期调整。</p>
 
+        <div class="bg-s-grey-100 p-5 rounded-s-lg border-[0.8px] border-s-grey-400 max-w-md">
+          <label for="edit-daily-count" class="block text-sm font-semibold text-s-grey-800 mb-1">每日值班人数</label>
+          <div class="flex items-center space-x-3 mt-2">
+            <button type="button" id="btn-edit-decrease-daily" aria-label="减少" title="减少" class="w-10 h-10 rounded-s-md bg-s-grad-white border-[0.8px] border-s-grey-300 text-s-grey-800 active:bg-s-grad-white-pressed inline-flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]!" aria-hidden="true">remove</span>
+            </button>
+            <input type="number" id="edit-daily-count" min="1" step="1" class="w-24 text-center rounded-s-md border-[0.8px] border-s-grey-400 py-2 px-3 text-s-grey-900 font-semibold shadow-s-inset-field focus:border-s-chip-blue-border focus:outline-none">
+            <button type="button" id="btn-edit-increase-daily" aria-label="增加" title="增加" class="w-10 h-10 rounded-s-md bg-s-grad-white border-[0.8px] border-s-grey-300 text-s-grey-800 active:bg-s-grad-white-pressed inline-flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]!" aria-hidden="true">add</span>
+            </button>
+            <span class="text-xs text-s-grey-600">人 / 天</span>
+          </div>
+          <p class="mt-2 text-xs text-s-grey-600"> </p>
+        </div>
+
         <!-- 新编排起始日期卡片 -->
         <div class="bg-s-grey-100 p-5 rounded-s-lg border-[0.8px] border-s-grey-400 max-w-md">
           <label for="edit-new-start-date-input" class="block text-sm font-semibold text-s-grey-800 mb-2">
@@ -511,6 +529,9 @@
           <button type="button" id="btn-edit-download-html" class="inline-flex items-center gap-1.5 px-4 py-2 bg-s-primary border-[0.8px] border-s-blue-500 text-white rounded-s-md text-sm font-medium shadow-s-card-sm active:bg-s-blue-pressed active:border-s-blue-600">
             <span class="material-symbols-outlined text-[18px]!" aria-hidden="true">download</span><span>导出HTML</span>
           </button>
+          <button type="button" id="btn-edit-download-pdf" class="inline-flex items-center gap-1.5 px-4 py-2 bg-s-grad-white border-[0.8px] border-s-grey-300 text-s-grey-800 rounded-s-md text-sm font-medium active:bg-s-grad-white-pressed">
+            <span class="material-symbols-outlined text-[18px]!" aria-hidden="true">download</span><span>导出PDF</span>
+          </button>
           <button type="button" id="btn-edit-download-csv" class="inline-flex items-center gap-1.5 px-4 py-2 bg-s-grad-white border-[0.8px] border-s-grey-300 text-s-grey-800 rounded-s-md text-sm font-medium active:bg-s-grad-white-pressed">
             <span class="material-symbols-outlined text-[18px]!" aria-hidden="true">table_view</span><span>导出CSV表格</span>
           </button>
@@ -578,8 +599,8 @@
 
   </main>
 
-  <footer id="site-footer" class="mt-auto py-3 px-4" aria-label="页脚" hidden>
-    <div id="site-footer-content" class="mx-auto max-w-5xl flex flex-wrap items-center justify-center gap-2 text-sm leading-normal text-s-grey-800 text-center [&_*]:m-0 [&_div]:flex [&_div]:flex-wrap [&_div]:items-center [&_div]:justify-center [&_div]:gap-2 [&_p]:flex [&_p]:flex-wrap [&_p]:items-center [&_p]:justify-center [&_p]:gap-2 [&_ul]:flex [&_ul]:flex-wrap [&_ul]:items-center [&_ul]:justify-center [&_ul]:gap-2 [&_ol]:flex [&_ol]:flex-wrap [&_ol]:items-center [&_ol]:justify-center [&_ol]:gap-2 [&_.site-footer-line]:basis-full [&_.site-footer-line]:flex [&_.site-footer-line]:flex-wrap [&_.site-footer-line]:items-center [&_.site-footer-line]:justify-center [&_.site-footer-line]:gap-2 [&_h1]:m-0 [&_h1]:text-sm [&_h1]:font-semibold [&_h1]:text-s-grey-800 [&_h2]:m-0 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-s-grey-800 [&_h3]:m-0 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-s-grey-800 [&_h4]:m-0 [&_h4]:text-sm [&_h4]:font-semibold [&_h4]:text-s-grey-800 [&_h5]:m-0 [&_h5]:text-sm [&_h5]:font-semibold [&_h5]:text-s-grey-800 [&_h6]:m-0 [&_h6]:text-sm [&_h6]:font-semibold [&_h6]:text-s-grey-800 [&_a]:text-s-blue-400 [&_a]:no-underline hover:[&_a]:text-s-blue-500 hover:[&_a]:underline [&_img]:h-5 [&_img]:w-auto [&_img]:max-w-full [&_img]:inline-block [&_img]:align-middle"></div>
+  <footer class="fixed inset-x-0 bottom-0 z-40 bg-transparent px-4 py-2 text-center text-sm text-neutral-500" aria-label="页脚">
+    <a class="underline" href="https://beian.miit.gov.cn">赣ICP备2026029830号-1</a>
   </footer>
 
   <!-- 手动修改轮换方案模态弹窗 (Markdown)（Smartisan Dialog：48px 灰头居中标题、54px 按钮组主操作最右） -->

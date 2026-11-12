@@ -2,11 +2,11 @@
  * 在线排班系统 - 交互与状态控制模块
  */
 
-// 界面控件隐藏判定：网址参数 hide=theme,footer（半角逗号分隔），隐藏主题切换按钮与页脚；
+// 界面控件隐藏判定：网址参数 hide=theme 隐藏主题切换按钮；
 // 对应功能（theme 参数本身）仍按地址栏参数生效，仅不显示切换按钮；对导出 PDF 无影响
 window.APP_HIDE = (() => {
   const raw = new URLSearchParams(location.search).get('hide') || '';
-  const valid = new Set(['theme', 'footer']);
+  const valid = new Set(['theme']);
   return new Set(raw.split(',').map(s => s.trim().toLowerCase()).filter(s => valid.has(s)));
 })();
 
@@ -103,6 +103,7 @@ const state = {
     importedItems: [],   // 导入的旧排班表 [{dateStr, weekday, names}]
     executedThrough: '', // 已执行截止日（含该天）YYYY-MM-DD
     remainingItems: [],  // 截止日之后的未执行班次（沿用原顺序）
+    regroupedAssignments: [], // 实际用于顺延的每日人员
     newStartDate: '',    // 重新编排的起始日期
     finalItems: [],
     markdownText: ''
@@ -266,6 +267,7 @@ const elements = {
   btnSubviewTable: document.getElementById('btn-subview-table'),
   btnSubviewText: document.getElementById('btn-subview-text'),
   btnDownloadHtml: document.getElementById('btn-download-html'),
+  btnDownloadPdf: document.getElementById('btn-download-pdf'),
   btnDownloadCsv: document.getElementById('btn-download-csv'),
   btnCopyMarkdown: document.getElementById('btn-copy-markdown'),
   viewTextContainer: document.getElementById('view-text-container'),
@@ -293,6 +295,9 @@ const elements = {
   editStatRemaining: document.getElementById('edit-stat-remaining'),
   editImportedCardsContainer: document.getElementById('edit-imported-cards-container'),
   btnEditClearImport: document.getElementById('btn-edit-clear-import'),
+  editDailyCount: document.getElementById('edit-daily-count'),
+  btnEditDecreaseDaily: document.getElementById('btn-edit-decrease-daily'),
+  btnEditIncreaseDaily: document.getElementById('btn-edit-increase-daily'),
   editNewStartDateInput: document.getElementById('edit-new-start-date-input'),
   editNewWeekdayTag: document.getElementById('edit-new-weekday-tag'),
   // editCalStatRangeStart: document.getElementById('edit-cal-stat-range-start'),
@@ -314,6 +319,7 @@ const elements = {
   btnEditSubviewTable: document.getElementById('btn-edit-subview-table'),
   btnEditSubviewText: document.getElementById('btn-edit-subview-text'),
   btnEditDownloadHtml: document.getElementById('btn-edit-download-html'),
+  btnEditDownloadPdf: document.getElementById('btn-edit-download-pdf'),
   btnEditDownloadCsv: document.getElementById('btn-edit-download-csv'),
   btnEditCopyMarkdown: document.getElementById('btn-edit-copy-markdown'),
   editViewTextContainer: document.getElementById('edit-view-text-container'),
@@ -325,11 +331,7 @@ const elements = {
   // Toast
   toast: document.getElementById('toast'),
   toastMessage: document.getElementById('toast-message'),
-  toastIcon: document.getElementById('toast-icon'),
-
-  // 网站页脚
-  siteFooter: document.getElementById('site-footer'),
-  siteFooterContent: document.getElementById('site-footer-content')
+  toastIcon: document.getElementById('toast-icon')
 };
 
 // 步骤标题导览菜单选项
@@ -536,105 +538,6 @@ function updateTopBar() {
       ? (step === 1 ? () => handleEditToStep2() : () => goToEditStep(step + 1))
       : () => goToStep(step + 1);
   }
-}
-
-// 已加载的页脚 Markdown，导出独立 HTML 时会直接内联
-var siteFooterMarkdown = '';
-
-// 解析页脚 Markdown，当前仅需支持段落和行内链接/图片
-function renderInlineMarkdown(text) {
-  const escapedText = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
-  return escapedText
-    .replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, (match, alt, href) => {
-      return `<img src="${href}" alt="${alt}">`;
-    })
-    .replace(/\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, (match, label, href) => {
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-    });
-}
-
-function renderMarkdownFooter(markdown) {
-  const lines = markdown.trim().split(/\r?\n/);
-  const paragraphLines = [];
-  const renderedBlocks = [];
-
-  const flushParagraph = () => {
-    if (paragraphLines.length === 0) return;
-    // Markdown 行尾两个空格表示硬换行，避免多行内容被合并
-    let currentLine = [];
-    const lineBlocks = [];
-
-    const flushLine = () => {
-      if (currentLine.length === 0) return;
-      lineBlocks.push(`<span class="site-footer-line">${currentLine.join(' ')}</span>`);
-      currentLine = [];
-    };
-
-    paragraphLines.forEach(line => {
-      const hasHardBreak = /  $/.test(line);
-      currentLine.push(renderInlineMarkdown(hasHardBreak ? line.trimEnd() : line));
-      if (hasHardBreak) flushLine();
-    });
-    flushLine();
-
-    renderedBlocks.push(`<p>${lineBlocks.join('')}</p>`);
-    paragraphLines.length = 0;
-  };
-
-  lines.forEach(rawLine => {
-    // 兼容 docs/footer.md 使用 <div align="center"> 包裹 Markdown 的写法
-    if (/^\s*(?:<div\b[^>]*>|<\/div>|<!--[\s\S]*?-->)\s*$/i.test(rawLine)) {
-      flushParagraph();
-      return;
-    }
-
-    const line = rawLine.trimStart();
-    if (line === '') {
-      flushParagraph();
-      return;
-    }
-    paragraphLines.push(line);
-  });
-  flushParagraph();
-
-  return renderedBlocks.join('');
-}
-
-function loadSiteFooter() {
-  // hide 参数含 footer 时隐藏页脚并跳过加载
-  if (window.APP_HIDE.has('footer')) {
-    if (elements.siteFooter) elements.siteFooter.hidden = true;
-    return;
-  }
-  if (!elements.siteFooter || !elements.siteFooterContent) return;
-
-  const renderLoadedFooter = () => {
-    if (typeof window.FOOTER_MARKDOWN !== 'string') return;
-    siteFooterMarkdown = window.FOOTER_MARKDOWN;
-    elements.siteFooterContent.innerHTML = renderMarkdownFooter(siteFooterMarkdown);
-    elements.siteFooter.hidden = elements.siteFooterContent.innerHTML.trim() === '';
-
-    // 重新加载时移除旧脚本，确保后续变更可重新触发
-    document.querySelectorAll('script[data-footer-loader]').forEach(node => node.remove());
-  };
-
-  // 页面直开（file://）时 fetch/XHR 均受浏览器限制，通过 JS 文件承载 Markdown 内容
-  const script = document.createElement('script');
-  script.dataset.footerLoader = 'true';
-  script.onload = renderLoadedFooter;
-  script.onerror = () => {
-    console.error('页脚加载失败');
-    elements.siteFooter.hidden = true;
-    document.querySelectorAll('script[data-footer-loader]').forEach(node => node.remove());
-  };
-  script.src = `docs/footer.md?_=${Date.now()}`;
-  document.head.appendChild(script);
 }
 
 // 错误提示
@@ -1778,7 +1681,6 @@ function generateStandaloneHtml(items, stats) {
   const markdownText = formatToMarkdown(items);
   const markdownJson = JSON.stringify(markdownText);
   const title = `排班表 (${stats.startDate} 至 ${stats.endDate})`;
-  const footerHtml = renderMarkdownFooter(siteFooterMarkdown);
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -2277,50 +2179,11 @@ function generateStandaloneHtml(items, stats) {
       font-size: 14px;
       display: none;
     }
-    .site-footer {
-      margin-top: 24px;
-      border-top: 0.8px solid #e2e2e2;
-      background-color: #ffffff;
-      padding: 12px 12px;
-      text-align: center;
-    }
-    .site-footer-content {
-      max-width: 1024px;
-      margin: 0 auto;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-size: 13px;
-      line-height: 1.5;
-      color: #636363;
-    }
-    .site-footer-content p {
-      margin: 0;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .site-footer-content .site-footer-line {
-      flex-basis: 100%;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .site-footer-content a {
-      color: #5079d9;
-      text-decoration: none;
-    }
     .hidden { display: none !important; }
     @media print {
       body { background: #ffffff; padding: 0; }
       .header { border: none; box-shadow: none; padding: 0 0 16px 0; }
-      .btn-print, .btn-csv, .header-actions, .toolbar, .cards-wrapper, .view-toggle, .markdown-wrapper { display: none !important; }
+      .btn-print, .btn-csv, .header-actions, .toolbar, .cards-wrapper, .view-toggle, .markdown-wrapper, .filter-hint { display: none !important; }
       .table-wrapper { display: block !important; max-height: none; overflow: visible; }
       .table-container { border: 0.8px solid #cccccc; box-shadow: none; }
       th, td { border-bottom: 0.8px solid #cccccc; }
@@ -2333,7 +2196,7 @@ function generateStandaloneHtml(items, stats) {
       <div class="header-top">
         <div>
           <div class="title">排班表</div>
-          <div class="subtitle">排班区间：${stats.startDate} 至 ${stats.endDate} <br> 点击人名亦可快速筛选。</div>
+          <div class="subtitle">排班区间：${stats.startDate} 至 ${stats.endDate}<span class="filter-hint"><br>点击人名亦可快速筛选。</span></div>
         </div>
         <div class="header-actions">
           <button class="btn-csv" onclick="downloadCsv()"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="1em" height="1em"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 2v3h-4V5h4zM8 19H5v-3h3v3zm0-5H5v-4h3v4zm0-6V5h3v3H8zm5 11h-3v-3h3v3zm0-5h-3v-4h3v4zm0-6V5h3v3h-3zm6 11h-4v-3h4v3zm0-5h-4v-4h4v4z"/></svg><span>表格</span></button>
@@ -2413,9 +2276,6 @@ function generateStandaloneHtml(items, stats) {
     </div>
   </div>
 
-  <footer class="site-footer" aria-label="页脚">
-    <div id="footerContent" class="site-footer-content"></div>
-  </footer>
 
   <div id="appToast" class="app-toast">
     <span style="display: inline-flex;"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="1em" height="1em"><path d="M9.55 18.2 3.8 12.45l1.45-1.45 4.3 4.3 9.05-9.05 1.45 1.45z"/></svg></span>
@@ -2688,8 +2548,6 @@ function generateStandaloneHtml(items, stats) {
     };
     requestAnimationFrame(autosizeMarkdownOutput);
 
-    var footerContent = document.getElementById('footerContent');
-    if (footerContent) footerContent.innerHTML = ${JSON.stringify(footerHtml)};
   </script>
 </body>
 </html>`;
@@ -2699,8 +2557,7 @@ function generateStandaloneHtml(items, stats) {
 // 导出前延迟 1 秒并提示"正在思考..."，期间加锁防止重复触发导致时间戳冲突
 let isExportingHtml = false;
 
-async function downloadHtmlFile() {
-  if (isExportingHtml) return;
+function getExportScheduleData() {
   const { items } = getActiveScheduleData();
   if (!items || items.length === 0) return;
 
@@ -2736,6 +2593,15 @@ async function downloadHtmlFile() {
     };
   }
 
+  return { items, stats };
+}
+
+async function downloadHtmlFile() {
+  if (isExportingHtml) return;
+  const data = getExportScheduleData();
+  if (!data) return;
+  const { items, stats } = data;
+
   isExportingHtml = true;
   try {
     await thinkBeforeExport();
@@ -2755,6 +2621,24 @@ async function downloadHtmlFile() {
   } finally {
     isExportingHtml = false;
   }
+}
+
+// 复用独立排班表的打印版式，通过浏览器打印对话框保存 PDF。
+function downloadPdfFile() {
+  const data = getExportScheduleData();
+  if (!data) return;
+
+  const frame = document.createElement('iframe');
+  frame.title = '排班表打印预览';
+  frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-10000px;top:0;border:0';
+  frame.onload = () => {
+    const printWindow = frame.contentWindow;
+    printWindow.addEventListener('afterprint', () => frame.remove(), { once: true });
+    printWindow.focus();
+    printWindow.print();
+  };
+  frame.srcdoc = generateStandaloneHtml(data.items, data.stats);
+  document.body.appendChild(frame);
 }
 
 // ----------------------------------------------------
@@ -2792,6 +2676,19 @@ function goToEditStep(targetStep) {
   // 进入第 2 步：渲染导入内容卡片（无内容时容器保持隐藏）
   if (targetStep === 2) {
     renderEditImportedCards();
+  }
+
+  if (targetStep >= 4) {
+    try {
+      const value = elements.editDailyCount.value.trim();
+      if (!value) throw new Error('请输入每日值班人数');
+      edit.regroupedAssignments = Number(value) === edit.importedItems[0].names.length
+        ? edit.remainingItems.map(item => item.names)
+        : regroupRemainingAssignments(edit.remainingItems, Number(value));
+    } catch (error) {
+      showToast(error.message, '<span class="material-symbols-outlined text-[16px]!" aria-hidden="true">warning</span>');
+      return;
+    }
   }
 
   // 进入第 4 步（假期调整）：清空共享假期集合，日历定位到新起始日期所在月
@@ -2843,14 +2740,14 @@ function generateEditFinalSchedule() {
   const edit = state.editOld;
   const { workdays } = computeScheduleDates(
     edit.newStartDate,
-    edit.remainingItems.length,
+    edit.regroupedAssignments.length,
     state.excludedHolidays,
     state.manualWorkdays
   );
 
   // 假期设置可能导致可用工作日不足，需阻断并提示
-  if (workdays.length < edit.remainingItems.length) {
-    showToast(`可用工作日不足：需要 ${edit.remainingItems.length} 天，仅找到 ${workdays.length} 天，请检查假期设置`, '<span class="material-symbols-outlined text-[16px]!" aria-hidden="true">warning</span>');
+  if (workdays.length < edit.regroupedAssignments.length) {
+    showToast(`可用工作日不足：需要 ${edit.regroupedAssignments.length} 天，仅找到 ${workdays.length} 天，请检查假期设置`, '<span class="material-symbols-outlined text-[16px]!" aria-hidden="true">warning</span>');
     return false;
   }
 
@@ -2858,7 +2755,7 @@ function generateEditFinalSchedule() {
     dateStr: wd.dateStr,
     weekday: wd.weekday,
     isManualWorkday: wd.isManualWorkday,
-    names: edit.remainingItems[i].names
+    names: edit.regroupedAssignments[i]
   }));
   edit.markdownText = formatToMarkdown(edit.finalItems);
   return true;
@@ -2901,6 +2798,7 @@ function handleEditParseText() {
   }
 
   state.editOld.importedItems = result.items;
+  elements.editDailyCount.value = result.items[0].names.length;
   // 导入内容变化后，此前的截止日选择不再可靠，重置后续状态
   state.editOld.executedThrough = '';
   state.editOld.remainingItems = [];
@@ -3019,6 +2917,7 @@ function handleEditExecutedThroughChange() {
 
   // 字符串比较对 YYYY-MM-DD 即为时间顺序
   state.editOld.remainingItems = state.editOld.importedItems.filter(item => item.dateStr > val);
+  state.editOld.regroupedAssignments = state.editOld.remainingItems.map(item => item.names);
   renderEditImportedCards();
 }
 
@@ -3054,11 +2953,11 @@ function getEditScheduleDateRange() {
   const edit = state.editOld;
   const { workdays } = computeScheduleDates(
     edit.newStartDate || getTodayDateStr(),
-    edit.remainingItems.length + 1,
+    edit.regroupedAssignments.length + 1,
     state.excludedHolidays,
     state.manualWorkdays
   );
-  const allowed = workdays.slice(0, edit.remainingItems.length);
+  const allowed = workdays.slice(0, edit.regroupedAssignments.length);
   const fallback = edit.newStartDate || getTodayDateStr();
   return {
     start: fallback,
@@ -3069,7 +2968,7 @@ function getEditScheduleDateRange() {
 // 第 3 步：渲染假期修改月历（镜像 renderStep4Calendar，作用于旧表流程）
 function renderEditCalendar() {
   const edit = state.editOld;
-  const totalDays = edit.remainingItems.length;
+  const totalDays = edit.regroupedAssignments.length;
 
   // 渲染前强制清掉超出当前合法区间的选择
   const renderRange = getEditScheduleDateRange();
@@ -3145,6 +3044,7 @@ function resetEditOldFlow() {
   elements.editImportTextarea.value = '';
   elements.editExecutedThroughInput.value = '';
   elements.editNewStartDateInput.value = '';
+  elements.editDailyCount.value = '';
   elements.editExecutedWeekdayTag.textContent = '';
   elements.editNewWeekdayTag.textContent = '';
   elements.editStatRemaining.textContent = '';
@@ -3289,6 +3189,7 @@ function setupEventListeners() {
   });
 
   elements.btnDownloadHtml.addEventListener('click', downloadHtmlFile);
+  elements.btnDownloadPdf.addEventListener('click', downloadPdfFile);
   elements.btnDownloadCsv.addEventListener('click', downloadCsvFile);
   elements.btnCopyMarkdown.addEventListener('click', copyMarkdownToClipboard);
 
@@ -3324,6 +3225,14 @@ function setupEventListeners() {
     showToast('成功');
   });
   elements.editImportFileInput.addEventListener('change', handleEditImportFile);
+  elements.btnEditDecreaseDaily.addEventListener('click', () => {
+    const count = Number(elements.editDailyCount.value) || 1;
+    elements.editDailyCount.value = Math.max(1, count - 1);
+  });
+  elements.btnEditIncreaseDaily.addEventListener('click', () => {
+    const count = Number(elements.editDailyCount.value) || 0;
+    elements.editDailyCount.value = count + 1;
+  });
   elements.editExecutedThroughInput.addEventListener('change', handleEditExecutedThroughChange);
   elements.editNewStartDateInput.addEventListener('change', handleEditNewStartDateChange);
 
@@ -3390,6 +3299,7 @@ function setupEventListeners() {
   });
 
   elements.btnEditDownloadHtml.addEventListener('click', downloadHtmlFile);
+  elements.btnEditDownloadPdf.addEventListener('click', downloadPdfFile);
   elements.btnEditDownloadCsv.addEventListener('click', downloadCsvFile);
   elements.btnEditCopyMarkdown.addEventListener('click', copyMarkdownToClipboard);
 
@@ -3428,7 +3338,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 显示模式按钮：按 URL 参数同步图标与描述（主页才显示，显隐由 updateTopBar 控制）
   updateThemeModeButton();
   setupEventListeners();
-  loadSiteFooter();
 
   document.addEventListener('click', (event) => {
     if (!elements.activeStepMenuAnchor) return;
@@ -3459,28 +3368,13 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.startDateInput.value = todayStr;
   handleStartDateChange();
 
-  // 每次进入网站默认从第 0 步（主页）开始；若网址带有合法参数则直接跳转对应步骤
-  // ?editStep=1~5 为 顺延自旧排班表流程（导入数据不跨刷新保留，守卫会回落到第 1 步）
-  // ?step=1~5 为新建排班流程
-  const urlParams = new URLSearchParams(location.search);
-  const urlEditStep = parseInt(urlParams.get('editStep'), 10);
-  if (Number.isInteger(urlEditStep) && urlEditStep >= 1 && urlEditStep <= 5) {
-    goToEditStep(urlEditStep);
-  } else {
-    const urlStep = parseInt(urlParams.get('step'), 10);
-    if (Number.isInteger(urlStep) && urlStep >= 1 && urlStep <= 5) {
-      goToStep(urlStep);
-    } else {
-      // 无参数默认主页：同步状态与顶栏（显示语言切换等），
-      // 并清掉 URL 中残留的步骤参数，保证主页与 step/editStep 一一对应
-      state.currentStep = 0;
-      updateTopBar();
-      if (urlParams.has('step') || urlParams.has('editStep')) {
-        urlParams.delete('step');
-        urlParams.delete('editStep');
-        const qs = urlParams.toString();
-        history.replaceState(null, '', qs ? `${location.pathname}?${qs}` : location.pathname);
-      }
-    }
+  // 刷新后流程数据不会保留，因此统一返回主页并清除所有步骤参数。
+  state.currentStep = 0;
+  updateTopBar();
+  const url = new URL(location.href);
+  if (url.searchParams.has('step') || url.searchParams.has('editStep')) {
+    url.searchParams.delete('step');
+    url.searchParams.delete('editStep');
+    history.replaceState(null, '', url.href);
   }
 });

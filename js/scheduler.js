@@ -114,6 +114,27 @@ function generateScheduleAssignments(names, dailyCount) {
   };
 }
 
+/** 将剩余人员班次重新分组，保留每人的次数，同一天不重复安排。 */
+function regroupRemainingAssignments(items, dailyCount) {
+  if (!Number.isInteger(dailyCount) || dailyCount < 1) throw new Error('每日人数必须是大于 0 的整数');
+  const counts = new Map();
+  items.forEach(item => item.names.forEach(name => counts.set(name, (counts.get(name) || 0) + 1)));
+  if (dailyCount > counts.size) throw new Error('每日人数不能超过剩余排班中的人员总数');
+  let remaining = Array.from(counts.values()).reduce((sum, count) => sum + count, 0);
+  const groups = [];
+  while (remaining > 0) {
+    const size = Math.min(dailyCount, remaining);
+    const available = Array.from(counts.entries()).filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1]);
+    if (available.length < size) throw new Error('无法按该人数分组并保留每人的剩余班次，请调整每日人数');
+    const names = available.slice(0, size).map(([name]) => name);
+    names.forEach(name => counts.set(name, counts.get(name) - 1));
+    groups.push(names);
+    remaining -= size;
+  }
+  return groups;
+}
+
 /**
  * 星期名称映射：中文全称
  */
@@ -728,6 +749,7 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateCycle,
     shuffleArray,
     generateScheduleAssignments,
+    regroupRemainingAssignments,
     formatDate,
     parseDate,
     computeScheduleDates,
