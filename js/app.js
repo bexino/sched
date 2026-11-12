@@ -295,6 +295,8 @@ const elements = {
   editImportedCardsContainer: document.getElementById('edit-imported-cards-container'),
   btnEditClearImport: document.getElementById('btn-edit-clear-import'),
   editDailyCount: document.getElementById('edit-daily-count'),
+  btnEditDecreaseDaily: document.getElementById('btn-edit-decrease-daily'),
+  btnEditIncreaseDaily: document.getElementById('btn-edit-increase-daily'),
   editNewStartDateInput: document.getElementById('edit-new-start-date-input'),
   editNewWeekdayTag: document.getElementById('edit-new-weekday-tag'),
   // editCalStatRangeStart: document.getElementById('edit-cal-stat-range-start'),
@@ -2651,7 +2653,10 @@ function goToEditStep(targetStep) {
   if (targetStep >= 4) {
     try {
       const value = elements.editDailyCount.value.trim();
-      edit.regroupedAssignments = value ? regroupRemainingAssignments(edit.remainingItems, Number(value)) : edit.remainingItems.map(item => item.names);
+      if (!value) throw new Error('请输入每日值班人数');
+      edit.regroupedAssignments = Number(value) === edit.importedItems[0].names.length
+        ? edit.remainingItems.map(item => item.names)
+        : regroupRemainingAssignments(edit.remainingItems, Number(value));
     } catch (error) {
       showToast(error.message, '<span class="material-symbols-outlined text-[16px]!" aria-hidden="true">warning</span>');
       return;
@@ -2765,6 +2770,7 @@ function handleEditParseText() {
   }
 
   state.editOld.importedItems = result.items;
+  elements.editDailyCount.value = result.items[0].names.length;
   // 导入内容变化后，此前的截止日选择不再可靠，重置后续状态
   state.editOld.executedThrough = '';
   state.editOld.remainingItems = [];
@@ -3190,6 +3196,14 @@ function setupEventListeners() {
     showToast('成功');
   });
   elements.editImportFileInput.addEventListener('change', handleEditImportFile);
+  elements.btnEditDecreaseDaily.addEventListener('click', () => {
+    const count = Number(elements.editDailyCount.value) || 1;
+    elements.editDailyCount.value = Math.max(1, count - 1);
+  });
+  elements.btnEditIncreaseDaily.addEventListener('click', () => {
+    const count = Number(elements.editDailyCount.value) || 0;
+    elements.editDailyCount.value = count + 1;
+  });
   elements.editExecutedThroughInput.addEventListener('change', handleEditExecutedThroughChange);
   elements.editNewStartDateInput.addEventListener('change', handleEditNewStartDateChange);
 

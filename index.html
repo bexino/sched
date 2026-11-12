@@ -434,9 +434,18 @@
         <p class="text-sm text-s-grey-600">选择重新编排的起始日期，下一步将在此后进行假期调整。</p>
 
         <div class="bg-s-grey-100 p-5 rounded-s-lg border-[0.8px] border-s-grey-400 max-w-md">
-          <label for="edit-daily-count" class="block text-sm font-semibold text-s-grey-800 mb-2">每日值班人数（可选）</label>
-          <input id="edit-daily-count" type="number" min="1" step="1" placeholder="留空则沿用原分组" class="w-full rounded-s-md border-[0.8px] border-s-grey-400 py-2.5 px-4 text-base text-s-grey-900 bg-white focus:outline-none">
-          <p class="mt-2 text-xs text-s-grey-600">修改人数后将重新分组，保留每人剩余的值班次数；最后一天可能不足设定人数。</p>
+          <label for="edit-daily-count" class="block text-sm font-semibold text-s-grey-800 mb-1">每日值班人数</label>
+          <div class="flex items-center space-x-3 mt-2">
+            <button type="button" id="btn-edit-decrease-daily" aria-label="减少" title="减少" class="w-10 h-10 rounded-s-md bg-s-grad-white border-[0.8px] border-s-grey-300 text-s-grey-800 active:bg-s-grad-white-pressed inline-flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]!" aria-hidden="true">remove</span>
+            </button>
+            <input type="number" id="edit-daily-count" min="1" step="1" class="w-24 text-center rounded-s-md border-[0.8px] border-s-grey-400 py-2 px-3 text-s-grey-900 font-semibold shadow-s-inset-field focus:border-s-chip-blue-border focus:outline-none">
+            <button type="button" id="btn-edit-increase-daily" aria-label="增加" title="增加" class="w-10 h-10 rounded-s-md bg-s-grad-white border-[0.8px] border-s-grey-300 text-s-grey-800 active:bg-s-grad-white-pressed inline-flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]!" aria-hidden="true">add</span>
+            </button>
+            <span class="text-xs text-s-grey-600">人 / 天</span>
+          </div>
+          <p class="mt-2 text-xs text-s-grey-600">默认显示导入表第一天的人数；修改后将重新分组，保留每人剩余的值班次数，最后一天可能不足设定人数。</p>
         </div>
 
         <!-- 新编排起始日期卡片 -->
