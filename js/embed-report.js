@@ -10,7 +10,7 @@ function reportToHub() {
   window.parent.postMessage({ source: 'bexino-hub', url: location.href }, HUB_ORIGIN)
 }
 
-// 覆盖 hashchange（prompt 的路由）与 replaceState/pushState（siss 的 ?step= 同步）
+// 覆盖 hashchange（prompt 的路由）与 replaceState/pushState（sched 的 ?step= 同步）
 window.addEventListener('hashchange', reportToHub)
 for (const method of ['replaceState', 'pushState']) {
   const original = history[method].bind(history)

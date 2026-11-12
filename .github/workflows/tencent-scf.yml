@@ -23,16 +23,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install tencentcloud-sdk-python-scf
       - name: 准备函数文件
         run: |
           mkdir -p scf-dist/public
           cp -R dist/. scf-dist/public/
           cp scf/app.js scf/scf_bootstrap scf-dist/
           chmod +x scf-dist/scf_bootstrap
-      - name: 部署云函数
-        uses: woodyyan/tencent-serverless-action@main
+          cd scf-dist
+          zip -qr ../scf.zip .
+      - name: 更新现有云函数代码
+        run: python scf/deploy.py scf.zip
         env:
-          STAGE: prod
-          SERVERLESS_PLATFORM_VENDOR: tencent
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
