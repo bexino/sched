@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /var/lang/node16/bin/node /var/user/app.js
