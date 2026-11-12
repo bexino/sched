@@ -23,3 +23,8 @@ Static scheduling app (能工智人排班系统): a 5-step wizard that generates
 - `generateStandaloneHtml` in `app.js` exports a fully self-contained HTML file with its own inlined CSS/JS that duplicates the table/cards view, search, and CSV-export logic (no Tailwind). Behavior changes to search/filter/CSV must be mirrored there too.
 - The sample roster is 22 hardcoded names in `SAMPLE_NAMES_TEXT`. Comments/toasts referencing "docs/1.md" or "49 人" are stale — no such file exists.
 - Core invariant: `calculateCycle(N, K)` builds the minimal no-remainder cycle (`totalDays = N/gcd(N,K)`, `shiftsPerPerson = K/gcd(N,K)`), and each person appears exactly `shiftsPerPerson` times. Step-2 Markdown editing (`parseAndValidateAssignmentsMarkdown`) rejects any edit that changes day count, per-day headcount, roster membership, or that equality.
+
+## 项目与云资源名称
+
+- GitHub 仓库和项目名称为 `bexino/sched` / `sched`。不要将 `siss` 当作当前项目或仓库名。
+- 现有腾讯云 SCF 函数名及 Cloudflare Worker 资源名为 `siss`；这些是独立的云资源标识，部署时须保留。不要仅因项目或仓库名称不同而改名或更换部署目标。
