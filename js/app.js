@@ -3368,28 +3368,13 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.startDateInput.value = todayStr;
   handleStartDateChange();
 
-  // 每次进入网站默认从第 0 步（主页）开始；若网址带有合法参数则直接跳转对应步骤
-  // ?editStep=1~5 为 顺延自旧排班表流程（导入数据不跨刷新保留，守卫会回落到第 1 步）
-  // ?step=1~5 为新建排班流程
-  const urlParams = new URLSearchParams(location.search);
-  const urlEditStep = parseInt(urlParams.get('editStep'), 10);
-  if (Number.isInteger(urlEditStep) && urlEditStep >= 1 && urlEditStep <= 5) {
-    goToEditStep(urlEditStep);
-  } else {
-    const urlStep = parseInt(urlParams.get('step'), 10);
-    if (Number.isInteger(urlStep) && urlStep >= 1 && urlStep <= 5) {
-      goToStep(urlStep);
-    } else {
-      // 无参数默认主页：同步状态与顶栏（显示语言切换等），
-      // 并清掉 URL 中残留的步骤参数，保证主页与 step/editStep 一一对应
-      state.currentStep = 0;
-      updateTopBar();
-      if (urlParams.has('step') || urlParams.has('editStep')) {
-        urlParams.delete('step');
-        urlParams.delete('editStep');
-        const qs = urlParams.toString();
-        history.replaceState(null, '', qs ? `${location.pathname}?${qs}` : location.pathname);
-      }
-    }
+  // 刷新后流程数据不会保留，因此统一返回主页并清除所有步骤参数。
+  state.currentStep = 0;
+  updateTopBar();
+  const url = new URL(location.href);
+  if (url.searchParams.has('step') || url.searchParams.has('editStep')) {
+    url.searchParams.delete('step');
+    url.searchParams.delete('editStep');
+    history.replaceState(null, '', url.href);
   }
 });
